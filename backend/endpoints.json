@@ -1,0 +1,251 @@
+{
+  "GET /api": {
+    "description": "returns a representation of all available endpoints"
+  },
+  "GET /api/pursuits": {
+    "description": "returns an array of all the pursuits",
+    "queries": {
+      "lat": "current latitiude as a number",
+      "long": "current longitude as a number"
+    },
+    "exampleResponse": {
+      "pursuits": [
+        {
+          "pursuit_id": 1,
+          "host_id": 1,
+          "image": "https://m.media-amazon.com/images/M/MV5BZjcxYTIxNjYtZmJkNS00Yjk5LTk2ZTgtYWQ4OWI0OTI3ODhmXkEyXkFqcGc@._V1_QL75_UX387_.jpg",
+          "target_lat": 34.0522,
+          "target_long": -118.2437,
+          "random_lat": 34.06,
+          "random_long": -118.25,
+          "difficulty": "Medium",
+          "completions": 45,
+          "active": true,
+          "created_at": "2024-03-15T08:00:00.000Z",
+          "title": "Hunt for the Hidden Relic"
+        },
+        {
+          "pursuit_id": 2,
+          "host_id": 2,
+          "image": "https://upload.wikimedia.org/wikipedia/commons/7/78/Traquair_House_Maze.jpg",
+          "target_lat": 51.5074,
+          "target_long": -0.1278,
+          "random_lat": 51.5079,
+          "random_long": -0.129,
+          "difficulty": "Hard",
+          "completions": 8,
+          "active": true,
+          "created_at": "2024-04-01T13:30:00.000Z",
+          "title": "Escape from the Labyrinth"
+        }
+      ]
+    }
+  },
+  "GET /api/pursuits/:pursuitID": {
+    "description": "returns a singular pursuit by its id",
+    "params": { "pursuit_id": "pursuits id as a number" },
+    "exampleResponse": {
+      "pursuit": {
+        "pursuit_id": 1,
+        "host_id": 1,
+        "image": "https://m.media-amazon.com/images/M/MV5BZjcxYTIxNjYtZmJkNS00Yjk5LTk2ZTgtYWQ4OWI0OTI3ODhmXkEyXkFqcGc@._V1_QL75_UX387_.jpg",
+        "target_lat": 34.0522,
+        "target_long": -118.2437,
+        "random_lat": 34.06,
+        "random_long": -118.25,
+        "difficulty": "Medium",
+        "completions": 45,
+        "active": true,
+        "created_at": "2024-03-15T08:00:00.000Z",
+        "title": "Hunt for the Hidden Relic"
+      }
+    }
+  },
+  "GET /api/pursuits/host/:pursuitID": {
+    "description": "returns a singular pursuit by the pursuits hosts id",
+    "params": { "pursuit_id": "pursuits id as a number" },
+    "exampleResponse": {
+      "pursuit": {
+        "pursuit_id": 1,
+        "host_id": 1,
+        "image": "https://m.media-amazon.com/images/M/MV5BZjcxYTIxNjYtZmJkNS00Yjk5LTk2ZTgtYWQ4OWI0OTI3ODhmXkEyXkFqcGc@._V1_QL75_UX387_.jpg",
+        "target_lat": 34.0522,
+        "target_long": -118.2437,
+        "random_lat": 34.06,
+        "random_long": -118.25,
+        "difficulty": "Medium",
+        "completions": 45,
+        "active": true,
+        "created_at": "2024-03-15T08:00:00.000Z",
+        "title": "Hunt for the Hidden Relic"
+      }
+    }
+  },
+  "PATCH /api/pursuits/:pursuitID": {
+    "description": "chnages if a hunt is active or not and return the updated hunt",
+    "params": { "pursuit_id": "pursuits id as a number" },
+    "body": [{ "active": "true/false (required)" }],
+    "exampleResponse": {
+      "pursuit": {
+        "pursuit_id": 1,
+        "host_id": 1,
+        "image": "https://m.media-amazon.com/images/M/MV5BZjcxYTIxNjYtZmJkNS00Yjk5LTk2ZTgtYWQ4OWI0OTI3ODhmXkEyXkFqcGc@._V1_QL75_UX387_.jpg",
+        "target_lat": 34.0522,
+        "target_long": -118.2437,
+        "random_lat": 34.06,
+        "random_long": -118.25,
+        "difficulty": "Medium",
+        "completions": 45,
+        "active": false,
+        "created_at": "2024-03-15T08:00:00.000Z",
+        "title": "Hunt for the Hidden Relic"
+      }
+    }
+  },
+  "POST /api/pursuits": {
+    "description": "posts a new hunt and returns the newly created hunt",
+    "body": [
+      {
+        "host_ID": "number of the users id (required)",
+        "image": "IMG url (required)",
+        "target_lat": "coordinates (required)",
+        "random_long": "coordinates (required)",
+        "random_lat": "coordinates (required)",
+        "target_long": "coordinates (required)",
+        "difficulty": "Easy/Medium/Hard (required)",
+        "active": "true/false (required)",
+        "title": "string name of pursuit (required)"
+      }
+    ],
+    "exampleResponse": {
+      "pursuit": {
+        "pursuit_id": 42,
+        "host_id": 5,
+        "image": "https://example.com/hunt1.jpg",
+        "target_lat": 41.7128,
+        "target_long": -75.006,
+        "random_lat": 41.71,
+        "random_long": -75.01,
+        "difficulty": "Easy",
+        "completions": 0,
+        "active": true,
+        "created_at": "2024-11-20T09:41:06.040Z",
+        "title": "Simple Hunt 6"
+      }
+    }
+  },
+  "GET /api/users": {
+    "description": "returns an array of all users objects",
+    "exampleResponse": {
+      "users": [
+        {
+          "user_id": 1,
+          "email": "john.doe@example.com",
+          "password": "$2b$04$LiPWIcniYK.h4ESc3tcKQu9DCJAOdtsEmJG6RM15G67tsxcVDF/M2",
+          "username": "john_doe",
+          "points": 1250
+        },
+        {
+          "user_id": 2,
+          "email": "sarah.connor@example.com",
+          "password": "$2b$04$X/nY7QCesFUKnUM0BOl0IOa1KEhFCmevwud/ZiPMbQyB3bAdYcYd.",
+          "username": "sarah_connor",
+          "points": 3200
+        },
+        {
+          "user_id": 3,
+          "email": "mike.jones@example.com",
+          "password": "$2b$04$CuyGMSEQrjO8ZWUHpRjIjudqHEeT67niQ6xHu12PeHqrtYdu2GqNq",
+          "username": "mike_jones",
+          "points": 2200
+        }
+      ]
+    }
+  },
+  "GET /api/users/:username": {
+    "description": "returns a singular user object by username",
+    "params": { "username": "users username as a string" },
+    "exampleResponse": {
+      "user": {
+        "username": "john_doe",
+        "points": 1250,
+        "user_id": 1,
+        "pursuit_id": 1,
+        "hosted_pursuit_id": 1
+      }
+    }
+  },
+  "PATCH /api/users/points/:userID": {
+    "description": "updates a users points and returns the updated users username and points",
+    "params": { "user_id": "users id as a number" },
+    "body": {
+      "inc_points": "ammount to increment points by as a number (required)"
+    },
+    "exampleResponse": {
+      "user": {
+        "username": "john_doe",
+        "points": 1255
+      }
+    }
+  },
+  "GET /api/pursuitsCompletedByUsers/:pursuitID": {
+    "description": "returns an array of the top 3 user objects with highest points earned from a pursuit by its id",
+    "params": { "pursuit_id": "pursuits id as a number" },
+    "exampleResponse": {
+      "users": [
+        {
+          "username": "sarah_connor",
+          "points": 50
+        },
+        {
+          "username": "mike_jones",
+          "points": 25
+        },
+        {
+          "username": "emily_james",
+          "points": 10
+        }
+      ]
+    }
+  },
+  "POST /api/pursuitsCompletedByUsers": {
+    "description": "posts a user and how many points they earnt to a pursuit returns the ammount of points they earnt",
+    "body": {
+      "user_id": "users id as a number (requireed)",
+      "pursuit_id": "pursuits id as a number (required)"
+    },
+    "exampleResponse": {
+      "points": 5
+    }
+  },
+  "PATCH /api/usersToCurrentPursuit/:userID": {
+    "description": "changes which pursuit a users is currently doing and returns the user id with their updated pursuit id",
+    "params": { "user_id": "users id as a number (requireed)" },
+    "body": {
+      "newPursuit": "pursuit_id as a number or null for no active pursuit (required)"
+    },
+    "exampleResponse": {
+      "currentPursuit": {
+        "user_id": 4,
+        "pursuit_id": 4
+      }
+    }
+  },
+  "POST /api/users": {
+    "description": "posts a new user and returns the new user",
+    "body": {
+      "email": "new user email as a string",
+      "password": "new user password as a string",
+      "username": "new username as a string"
+    },
+    "exampleResponse": {
+      "user": {
+        "user_id": 26,
+        "email": "new user email",
+        "password": "good password",
+        "username": "new user",
+        "points": 0
+      }
+    }
+  }
+}

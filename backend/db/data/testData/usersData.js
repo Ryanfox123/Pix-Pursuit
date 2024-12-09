@@ -1,0 +1,42 @@
+module.exports = [
+  {
+    ID: 1,
+    email: "user1@example.com",
+    password: "pass123",
+    points: 100,
+    pursuitID: null,
+    username: "user1",
+  },
+  {
+    ID: 2,
+    email: "user2@example.com",
+    password: "1234pass",
+    points: 200,
+    pursuitID: 2,
+    username: "user2",
+  },
+  {
+    ID: 3,
+    email: "user3@example.com",
+    password: "12345pass",
+    points: 200,
+    pursuitID: 1,
+    username: "user3",
+  },
+  {
+    ID: 4,
+    email: "user4@example.com",
+    password: "123456pass",
+    points: 200,
+    pursuitID: 2,
+    username: "user4",
+  },
+  {
+    ID: 5,
+    email: "user5@example.com",
+    password: "1234567pass",
+    points: 200,
+    pursuitID: 2,
+    username: "user5",
+  },
+];
