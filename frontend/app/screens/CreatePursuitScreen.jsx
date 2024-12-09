@@ -1,0 +1,326 @@
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TextInput,
+  TouchableHighlight,
+  TouchableOpacity,
+  ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState, useContext, useRef, useEffect } from "react";
+import Colours from "../utils/Colours";
+import SelectDifficulty from "../components/SelectDifficulty";
+import { useNavigation } from "@react-navigation/native";
+import { PhotoContext } from "../context/Photo";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import AWS from "aws-sdk";
+import calcRadius from "../utils/calcRadius";
+import { getLocation } from "../utils/loaction";
+import { postPursuit } from "../api";
+import { UserContext } from "../context/UserContext";
+import "react-native-get-random-values";
+import { v4 as uuidv4 } from "uuid";
+
+const CreatePursuit = () => {
+  const navigation = useNavigation();
+  const { photo, setPhoto } = useContext(PhotoContext);
+  const { user, setUser } = useContext(UserContext);
+  const [loading, setLoading] = useState(false);
+  const [value, setValue] = useState(null);
+  const [pursuitData, setPursuitData] = useState({
+    title: "",
+    image: "",
+    difficulty: null,
+    active: true,
+  });
+  const [error, setError] = useState(null);
+  const titleInputRef = useRef(null);
+
+  const s3 = new AWS.S3();
+
+  AWS.config.update({
+    accessKeyId: process.env.EXPO_PUBLIC_KEY,
+    secretAccessKey: process.env.EXPO_PUBLIC_ACCESS_SECRET,
+    region: process.env.EXPO_PUBLIC_REGION,
+  });
+
+  const uploadFileToS3 = (bucketName, fileName, filePath) => {
+    const params = {
+      Bucket: bucketName,
+      Key: fileName,
+      Body: filePath,
+    };
+
+    return s3.upload(params).promise();
+  };
+
+  const final = async () => {
+    setLoading(true);
+    if (pursuitData.difficulty === null || pursuitData.title.length === 0) {
+      return setError("Please fill in all information to post a pursuit");
+    }
+
+    const bucketName = "pix-pursuit";
+    const filePath = photo.uri.replace("file://", "");
+    const fileName = uuidv4();
+
+    try {
+      const currLocation = await getLocation();
+      const newLocation = {
+        latitude: currLocation.coords.latitude,
+        longitude: currLocation.coords.longitude,
+      };
+      const radiusCoords = calcRadius(newLocation, pursuitData.difficulty);
+
+      const posted = await postPursuit(
+        pursuitData,
+        newLocation,
+        radiusCoords,
+        fileName,
+        user.user_id
+      );
+      setUser((user) => {
+        return { ...user, hosted_pursuit_id: posted.pursuit_id };
+      });
+
+      const fileData = await fetch(filePath).then((response) =>
+        response.blob()
+      );
+      await uploadFileToS3(bucketName, fileName, fileData);
+
+      setLoading(false);
+      setPhoto(null);
+      setPursuitData({
+        host_ID: user.user_id,
+        title: "",
+        image: "",
+        difficulty: null,
+        active: true,
+      });
+      navigation.goBack();
+    } catch (error) {
+      setLoading(false);
+      setError("Error uploading your pursuit");
+    }
+  };
+
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View>
+              <Text style={Styles.introText}>
+                Here you can create a new pursuit for others to take part in!
+                Find a cool location to take a picture, give it a an interesting
+                name and description and sit back and watch as other hunters
+                compete to finish your pursuit as fast as possible!
+              </Text>
+              <View style={Styles.container}>
+                <Text style={Styles.labelText}>Title:</Text>
+                <TextInput
+                  ref={titleInputRef}
+                  style={Styles.formInputText}
+                  placeholder="Enter a pursuit title"
+                  value={pursuitData.title}
+                  onChangeText={(text) =>
+                    setPursuitData((prev) => {
+                      return {
+                        ...prev,
+                        title: text,
+                      };
+                    })
+                  }
+                ></TextInput>
+                <View style={Styles.picContainer}>
+                  <Text style={Styles.picInputText}>
+                    Upload a Pursuit picture
+                  </Text>
+                  <TouchableHighlight
+                    onPress={() => {
+                      setPhoto(null);
+                      navigation.navigate("Camera");
+                    }}
+                  >
+                    <Image
+                      style={Styles.camLogo}
+                      source={require("../../assets/camera-icon.png")}
+                    />
+                  </TouchableHighlight>
+                </View>
+                {photo ? (
+                  <View>
+                    <Image
+                      style={Styles.imagePreview}
+                      source={{
+                        uri: `data:image/jpeg;base64,${photo.base64}`,
+                      }}
+                    />
+                    <TouchableOpacity
+                      onPress={() => {
+                        setError(null);
+                        setPhoto(null);
+                      }}
+                    >
+                      <Text style={Styles.removeImageText}>
+                        Remove this image
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+                <View>
+                  <View style={Styles.formContainer}>
+                    <View style={Styles.difficultyContainer}>
+                      <Text style={[Styles.labelText, { paddingTop: 15 }]}>
+                        Select a difficulty:
+                      </Text>
+                      <SelectDifficulty
+                        setPursuitData={setPursuitData}
+                        value={value}
+                        setValue={setValue}
+                      />
+                    </View>
+                  </View>
+                </View>
+                <View>
+                  {error ? <Text style={Styles.errorMsg}>{error}</Text> : null}
+                </View>
+                <TouchableOpacity
+                  disabled={!photo || loading}
+                  style={[
+                    Styles.createBtn,
+                    !photo ? { backgroundColor: "gray" } : null,
+                  ]}
+                  onPress={() => {
+                    setError(false);
+                    setLoading(true);
+                    setValue(null);
+                    final();
+                  }}
+                >
+                  {loading ? (
+                    <ActivityIndicator />
+                  ) : (
+                    <Text style={{ fontWeight: "bold" }}>
+                      Create your pursuit!
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setPhoto(null);
+                  navigation.goBack();
+                }}
+              >
+                <Text style={Styles.goBack}>Go back</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+};
+
+export default CreatePursuit;
+
+const Styles = StyleSheet.create({
+  introText: {
+    marginVertical: 40,
+    width: 300,
+    marginHorizontal: "auto",
+    textAlign: "center",
+  },
+  container: {
+    gap: 20,
+    width: "90%",
+    borderRadius: 10,
+    padding: 8,
+    borderColor: "#D9D9D9",
+    borderWidth: 2,
+    marginHorizontal: "auto",
+  },
+  picInputText: {
+    fontWeight: "bold",
+    justifyContent: "center",
+    padding: 20,
+  },
+  camLogo: {
+    height: 60,
+    width: 60,
+    borderColor: "#D9D9D9",
+    borderWidth: 2,
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: Colours.AQUA_BLUE,
+  },
+  picContainer: {
+    flexDirection: "row",
+    padding: 8,
+    justifyContent: "space-between",
+    height: 80,
+    borderColor: "#D9D9D9",
+    borderWidth: 2,
+    borderRadius: 8,
+  },
+  formContainer: {
+    gap: 10,
+  },
+  formInputText: {
+    padding: 15,
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: Colours.LIGHTGREY,
+    color: "white",
+    borderColor: "#D9D9D9",
+    borderWidth: 2,
+    color: "black",
+  },
+  difficultyContainer: {
+    paddingTop: 10,
+    flexDirection: "row",
+  },
+  labelText: {
+    fontWeight: "bold",
+  },
+  createBtn: {
+    marginVertical: 10,
+    width: "60%",
+    backgroundColor: Colours.AQUA_BLUE,
+    borderRadius: 15,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: "auto",
+  },
+  goBack: {
+    textAlign: "center",
+    marginTop: 20,
+    textDecorationLine: "underline",
+  },
+  imagePreview: {
+    marginHorizontal: "auto",
+    height: 140,
+    width: 140,
+    resizeMode: "cover",
+    borderRadius: 10 / 1,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: Colours.AQUA_BLUE,
+  },
+  removeImageText: {
+    color: "red",
+    marginVertical: 15,
+    marginHorizontal: "auto",
+    textDecorationLine: "underline",
+  },
+  errorMsg: {
+    color: "red",
+    marginHorizontal: "auto",
+  },
+});
